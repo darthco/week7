@@ -33,10 +33,10 @@ jobs:
         run: |
           gcloud container clusters create demo-log-ml-cluster \
             --zone=${{ secrets.GCP_REGION }} \
-            --num-nodes=3 \
+            --num-nodes=1 \
             --machine-type=e2-small \
             --disk-type=pd-standard \
-            --disk-size=50 \
+            --disk-size=80 \
             --workload-pool=${{ secrets.GCP_PROJECT_ID }}.svc.id.goog \
             --logging=SYSTEM,WORKLOAD \
             --monitoring=SYSTEM
