@@ -29,17 +29,22 @@ jobs:
         run: |
           docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/my-repo/iris-api:latest
 
-      - name: Create GKE cluster
+      - name: Create GKE cluster (if not exists)
         run: |
-          gcloud container clusters create demo-log-ml-cluster \
-            --zone=${{ secrets.GCP_REGION }} \
-            --num-nodes=1 \
-            --machine-type=e2-small \
-            --disk-type=pd-standard \
-            --disk-size=80 \
-            --workload-pool=${{ secrets.GCP_PROJECT_ID }}.svc.id.goog \
-            --logging=SYSTEM,WORKLOAD \
-            --monitoring=SYSTEM
+          if gcloud container clusters describe demo-log-ml-cluster --zone=${{ secrets.GCP_REGION }} >/dev/null 2>&1; then
+            echo "✅ Cluster already exists. Skipping creation."
+          else
+            echo "🚀 Creating new GKE cluster..."
+            gcloud container clusters create demo-log-ml-cluster \
+              --zone=${{ secrets.GCP_REGION }} \
+              --num-nodes=3 \
+              --machine-type=e2-small \
+              --disk-type=pd-standard \
+              --disk-size=50 \
+              --workload-pool=${{ secrets.GCP_PROJECT_ID }}.svc.id.goog \
+              --logging=SYSTEM,WORKLOAD \
+              --monitoring=SYSTEM
+          fi
 
       - name: Get GKE credentials
         uses: google-github-actions/get-gke-credentials@v2
