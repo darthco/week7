@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: demo-log-ml-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: demo-log-ml-service
