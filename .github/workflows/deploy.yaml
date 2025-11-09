@@ -1,0 +1,65 @@
+name: Deploy IRIS API to GKE
+
+on:
+  push:
+    branches: ["master"]
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Google Cloud auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/my-repo/iris-api:latest .
+
+      - name: Push image to Artifact Registry
+        run: |
+          docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/my-repo/iris-api:latest
+
+      - name: Create GKE cluster
+        run: |
+          gcloud container clusters create demo-log-ml-cluster \
+            --zone=${{ secrets.GCP_REGION }} \
+            --num-nodes=3 \
+            --machine-type=e2-small \
+            --disk-type=pd-standard \
+            --disk-size=50 \
+            --workload-pool=${{ secrets.GCP_PROJECT_ID }}.svc.id.goog \
+            --logging=SYSTEM,WORKLOAD \
+            --monitoring=SYSTEM
+
+      - name: Get GKE credentials
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: demo-log-ml-cluster
+          location: ${{ secrets.GCP_REGION }}
+
+      - name: Set up Workload Identity
+        run: |
+          kubectl create serviceaccount github-dvc-bot --namespace default || true
+          kubectl annotate serviceaccount github-dvc-bot \
+            --namespace default \
+            iam.gke.io/gcp-service-account=github-dvc-bot@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com --overwrite
+          gcloud iam service-accounts add-iam-policy-binding \
+            github-dvc-bot@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+            --role roles/iam.workloadIdentityUser \
+            --member "serviceAccount:${{ secrets.GCP_PROJECT_ID }}.svc.id.goog[default/github-dvc-bot]"
+
+      - name: Deploy manifests
+        run: |
+          kubectl apply -f k8s/
+          kubectl set image deployment/demo-log-ml-service fastapi-container=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/my-repo/demo_log:latest
+          kubectl rollout status deployment/demo-log-ml-service
