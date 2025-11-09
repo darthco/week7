@@ -1,0 +1,40 @@
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/container.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/container.clusterAdmin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.admin"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/iam.serviceAccountUser"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/logging.logWriter"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/cloudtrace.agent"
+
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+  --member="serviceAccount:github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/iam.workloadIdentityUser"
+
+---- 3 steps for Kube ----
+
+kubectl create serviceaccount github-dvc-bot --namespace default
+
+kubectl annotate serviceaccount github-dvc-bot \
+  --namespace default \
+  iam.gke.io/gcp-service-account=github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com
+
+gcloud iam service-accounts add-iam-policy-binding github-dvc-bot@$PROJECT_ID.iam.gserviceaccount.com \
+  --role roles/iam.workloadIdentityUser \
+  --member "serviceAccount:$PROJECT_ID.svc.id.goog[default/github-dvc-bot]"
+
