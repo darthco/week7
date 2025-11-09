@@ -23,11 +23,11 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/my-repo/iris-api:latest .
+          docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/my-repo/demo_log:latest .
 
       - name: Push image to Artifact Registry
         run: |
-          docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/my-repo/iris-api:latest
+          docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/my-repo/demo_log:latest
 
       - name: Create GKE cluster (if not exists)
         run: |
