@@ -52,16 +52,16 @@ jobs:
           cluster_name: demo-log-ml-cluster
           location: ${{ secrets.GCP_REGION }}
 
-      - name: Set up Workload Identity
-        run: |
-          kubectl create serviceaccount github-dvc-bot --namespace default || true
-          kubectl annotate serviceaccount github-dvc-bot \
-            --namespace default \
-            iam.gke.io/gcp-service-account=github-dvc-bot@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com --overwrite
-          gcloud iam service-accounts add-iam-policy-binding \
-            github-dvc-bot@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
-            --role roles/iam.workloadIdentityUser \
-            --member "serviceAccount:${{ secrets.GCP_PROJECT_ID }}.svc.id.goog[default/github-dvc-bot]"
+      # - name: Set up Workload Identity
+      #   run: |
+      #     kubectl create serviceaccount github-dvc-bot --namespace default || true
+      #     kubectl annotate serviceaccount github-dvc-bot \
+      #       --namespace default \
+      #       iam.gke.io/gcp-service-account=github-dvc-bot@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com --overwrite
+      #     gcloud iam service-accounts add-iam-policy-binding \
+      #       github-dvc-bot@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com \
+      #       --role roles/iam.workloadIdentityUser \
+      #       --member "serviceAccount:${{ secrets.GCP_PROJECT_ID }}.svc.id.goog[default/github-dvc-bot]"
 
       - name: Deploy manifests
         run: |
